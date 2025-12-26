@@ -1,27 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Snake Game</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-    <main>
-        <section>
-            <div id="info">
-                <p class="info" >Current Score : <span id="current_score"></span></p>
-                <p class="info"> Heighest Score : <span id="Heigh_score"></span></p>
-                <p class="info">Time taken : <span id="Time_taken"></span></p>
-            </div>
-            <div id="board">
-                
-            </div>
-        </section>
-    </main>
-    <script src="Script.js"></script>
-</body>
 
+<main>
+  <section>
+    <div id="info">
+      <p>Score: <span id="current_score">0</span></p>
+      <p>High Score: <span id="Heigh_score">0</span></p>
+      <p>Time: <span id="Time_taken">0s</span></p>
+    </div>
+
+    <div id="board"></div>
+  </section>
+</main>
+
+<div id="overlay">
+  <div id="popup">
+    <h1>Game Over</h1>
+    <p>Press Enter or Space to Restart</p>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
 </html>
