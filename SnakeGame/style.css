@@ -32,8 +32,10 @@ section {
   display: grid;
   grid-template-columns: repeat(20, 1fr);
   aspect-ratio: 1;
-  border: 2px solid black;
   background: #111;
+  border: 2px solid #000;
+  touch-action: none;
+  outline: none;
 }
 
 .cell {
@@ -48,7 +50,6 @@ section {
   background: red;
 }
 
-/* GAME OVER OVERLAY */
 #overlay {
   position: fixed;
   inset: 0;
@@ -68,16 +69,11 @@ section {
   padding: 30px 50px;
   border-radius: 10px;
   text-align: center;
-  animation: pop 0.3s ease-out;
 }
 
-@keyframes pop {
-  from {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+#popup button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
 }

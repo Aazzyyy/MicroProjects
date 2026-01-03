@@ -3,162 +3,158 @@ const scoreEl = document.getElementById("current_score");
 const highScoreEl = document.getElementById("Heigh_score");
 const timeEl = document.getElementById("Time_taken");
 const overlay = document.getElementById("overlay");
+const restartBtn = document.getElementById("restartBtn");
 
-const width = 20;
-const totalCells = width * width;
+const size = 20;
+const total = size * size;
 const speed = 180;
-const initialSnake = [210, 209, 208];
+const baseSnake = [210, 209, 208];
 
 let cells = [];
 let snake = [];
-let foodIndex;
-let direction = 1;
-let gameInterval;
-let timeInterval;
+let food = null;
+let dir = 1;
+let loop;
+let timer;
 let startTime;
-let paused = false;
 
 let highScore = localStorage.getItem("highScore") || 0;
 highScoreEl.textContent = highScore;
 
-function createBoard() {
+function build() {
   board.innerHTML = "";
   cells = [];
-  for (let i = 0; i < totalCells; i++) {
-    const cell = document.createElement("div");
-    cell.classList.add("cell");
-    board.appendChild(cell);
-    cells.push(cell);
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement("div");
+    d.className = "cell";
+    board.appendChild(d);
+    cells.push(d);
   }
 }
 
-function drawSnake() {
+function draw() {
   snake.forEach(i => cells[i].classList.add("snake"));
 }
 
-function eraseSnake() {
+function clear() {
   snake.forEach(i => cells[i].classList.remove("snake"));
 }
 
-function generateFood() {
+function foodSpawn() {
+  if (food !== null) cells[food].classList.remove("food");
   do {
-    foodIndex = Math.floor(Math.random() * totalCells);
-  } while (snake.includes(foodIndex));
-  cells[foodIndex].classList.add("food");
+    food = Math.floor(Math.random() * total);
+  } while (snake.includes(food));
+  cells[food].classList.add("food");
 }
 
-function eraseFood() {
-  cells[foodIndex]?.classList.remove("food");
-}
-
-function updateScore() {
-  const score = snake.length - initialSnake.length;
-  scoreEl.textContent = score;
-  if (score > highScore) {
-    highScore = score;
+function scoreUpdate() {
+  const s = snake.length - baseSnake.length;
+  scoreEl.textContent = s;
+  if (s > highScore) {
+    highScore = s;
     localStorage.setItem("highScore", highScore);
     highScoreEl.textContent = highScore;
   }
 }
 
-function updateTime() {
+function timeUpdate() {
   timeEl.textContent = Math.floor((Date.now() - startTime) / 1000) + "s";
 }
 
-function endGame() {
-  clearInterval(gameInterval);
-  clearInterval(timeInterval);
+function over() {
+  clearInterval(loop);
+  clearInterval(timer);
   overlay.classList.add("active");
 }
 
-function moveSnake() {
-  if (paused) return;
+function setDir(n) {
+  if (dir + n !== 0) dir = n;
+}
 
+function step() {
   const head = snake[0];
-  const newHead = head + direction;
+  const next = head + dir;
+  const body = next === food ? snake : snake.slice(0, -1);
 
   if (
-    (direction === 1 && head % width === width - 1) ||
-    (direction === -1 && head % width === 0) ||
-    (direction === width && newHead >= totalCells) ||
-    (direction === -width && newHead < 0) ||
-    snake.includes(newHead)
+    (dir === 1 && head % size === size - 1) ||
+    (dir === -1 && head % size === 0) ||
+    (dir === size && next >= total) ||
+    (dir === -size && next < 0) ||
+    body.includes(next)
   ) {
-    endGame();
+    over();
     return;
   }
 
-  eraseSnake();
-  snake.unshift(newHead);
+  clear();
+  snake.unshift(next);
 
-  if (newHead === foodIndex) {
-    eraseFood();
-    generateFood();
-    updateScore();
+  if (next === food) {
+    foodSpawn();
+    scoreUpdate();
   } else {
     snake.pop();
   }
 
-  drawSnake();
+  draw();
 }
 
-function moveSnakeTouch(){
-  let touchStartX = 0;
-let touchStartY = 0;
-
-document.addEventListener("touchstart", e => {
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-});
-
-document.addEventListener("touchend", e => {
-  const touchEndX = e.changedTouches[0].clientX;
-  const touchEndY = e.changedTouches[0].clientY;
-
-  const diffX = touchEndX - touchStartX;
-  const diffY = touchEndY - touchStartY;
-
-  if (Math.abs(diffX) > Math.abs(diffY)) {
-    if (diffX > 0 && direction !== -1) direction = 1;
-    if (diffX < 0 && direction !== 1) direction = -1;
-  } else {
-    if (diffY > 0 && direction !== -width) direction = width;
-    if (diffY < 0 && direction !== width) direction = -width;
-  }
-});
-}
-
-function startGame() {
-  clearInterval(gameInterval);
-  clearInterval(timeInterval);
+function start() {
+  clearInterval(loop);
+  clearInterval(timer);
 
   overlay.classList.remove("active");
 
-  snake = [...initialSnake];
-  direction = 1;
-  paused = false;
+  snake = [...baseSnake];
+  dir = 1;
 
   scoreEl.textContent = "0";
   timeEl.textContent = "0s";
   startTime = Date.now();
 
-  createBoard();
-  drawSnake();
-  generateFood();
+  build();
+  draw();
+  foodSpawn();
 
-  gameInterval = setInterval(moveSnake, speed);
-  timeInterval = setInterval(updateTime, 1000);
+  loop = setInterval(step, speed);
+  timer = setInterval(timeUpdate, 1000);
+
+  board.focus();
 }
 
-document.addEventListener("keydown", e => {
-  if (e.key === "ArrowRight" && direction !== -1) direction = 1;
-  if (e.key === "ArrowLeft" && direction !== 1) direction = -1;
-  if (e.key === "ArrowUp" && direction !== width) direction = -width;
-  if (e.key === "ArrowDown" && direction !== -width) direction = width;
+let sx = 0;
+let sy = 0;
 
-  if ((e.key === "Enter" || e.key === " ") && overlay.classList.contains("active")) {
-    startGame();
+board.addEventListener("pointerdown", e => {
+  sx = e.clientX;
+  sy = e.clientY;
+});
+
+board.addEventListener("pointerup", e => {
+  const dx = e.clientX - sx;
+  const dy = e.clientY - sy;
+
+  if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return;
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    dx > 0 ? setDir(1) : setDir(-1);
+  } else {
+    dy > 0 ? setDir(size) : setDir(-size);
   }
 });
 
-startGame();
+window.addEventListener("keydown", e => {
+  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
+    e.preventDefault();
+  }
+  if (e.key === "ArrowRight") setDir(1);
+  if (e.key === "ArrowLeft") setDir(-1);
+  if (e.key === "ArrowUp") setDir(-size);
+  if (e.key === "ArrowDown") setDir(size);
+});
+
+restartBtn.addEventListener("click", start);
+
+start();
